@@ -1,0 +1,82 @@
+### Extension VS Code « REST Client » : cliquer sur « Send Request » au-dessus de chaque requête.
+@host = http://localhost:8080
+
+### 1. Inscription (Alice) — le token est réutilisé plus bas
+# @name alice
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "name": "Alice", "email": "alice@example.com", "password": "password123" }
+
+### 2. Inscription (Bob)
+# @name bob
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "name": "Bob", "email": "bob@example.com", "password": "password123" }
+
+### 3. Alice crée un workspace
+# @name workspace
+POST {{host}}/api/workspaces
+Authorization: Bearer {{alice.response.body.token}}
+Content-Type: application/json
+
+{ "name": "Agence Web", "description": "Projets clients" }
+
+### 4. Alice invite Bob
+POST {{host}}/api/workspaces/{{workspace.response.body.id}}/members
+Authorization: Bearer {{alice.response.body.token}}
+Content-Type: application/json
+
+{ "email": "bob@example.com", "role": "MEMBER" }
+
+### 5. Alice crée un projet
+# @name project
+POST {{host}}/api/workspaces/{{workspace.response.body.id}}/projects
+Authorization: Bearer {{alice.response.body.token}}
+Content-Type: application/json
+
+{ "name": "Site vitrine", "description": "Refonte du site" }
+
+### 6. Alice crée une tâche assignée à Bob (e-mail visible sur http://localhost:8025)
+# @name task
+POST {{host}}/api/projects/{{project.response.body.id}}/tasks
+Authorization: Bearer {{alice.response.body.token}}
+Content-Type: application/json
+
+{
+  "title": "Maquette de la page d'accueil",
+  "description": "Version mobile et desktop",
+  "priority": "HIGH",
+  "dueDate": "2026-12-01",
+  "assigneeEmail": "bob@example.com"
+}
+
+### 7. Bob voit ses tâches
+GET {{host}}/api/tasks/mine
+Authorization: Bearer {{bob.response.body.token}}
+
+### 8. Bob passe la tâche en cours
+PATCH {{host}}/api/tasks/{{task.response.body.id}}/status
+Authorization: Bearer {{bob.response.body.token}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 9. Bob commente (Alice reçoit un e-mail)
+POST {{host}}/api/tasks/{{task.response.body.id}}/comments
+Authorization: Bearer {{bob.response.body.token}}
+Content-Type: application/json
+
+{ "content": "Première version prête, j'attends vos retours." }
+
+### 10. Liste filtrée des tâches du projet
+GET {{host}}/api/projects/{{project.response.body.id}}/tasks?status=IN_PROGRESS&priority=HIGH
+Authorization: Bearer {{alice.response.body.token}}
+
+### 11. Bob essaie de créer un projet → 403
+POST {{host}}/api/workspaces/{{workspace.response.body.id}}/projects
+Authorization: Bearer {{bob.response.body.token}}
+Content-Type: application/json
+
+{ "name": "Interdit" }

@@ -1,0 +1,6 @@
+package com.taskflow.task_management_api.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record ProjectRequest(@NotBlank @Size(max = 200) String name, @Size(max = 2000) String description) {}
