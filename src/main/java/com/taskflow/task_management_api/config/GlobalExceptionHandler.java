@@ -1,6 +1,7 @@
 package com.taskflow.task_management_api.config;
 
 import com.taskflow.task_management_api.dto.ApiError;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 /** Toutes les erreurs sortent au même format JSON : { timestamp, status, message }. */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -66,6 +68,7 @@ public class GlobalExceptionHandler {
             String detail = errorResponse.getBody() == null ? null : errorResponse.getBody().getDetail();
             return build(errorResponse.getStatusCode().value(), detail != null ? detail : "Erreur");
         }
+        log.error("Erreur interne non prévue", ex);
         return build(500, "Erreur interne du serveur");
     }
 }
