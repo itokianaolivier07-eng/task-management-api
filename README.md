@@ -19,7 +19,8 @@ docker compose up -d
 ```
 
 - Interface Mailpit (e-mails reçus) : http://localhost:8025
-- Tout lancer dans Docker (API comprise) : `docker compose --profile full up --build`
+- Tout lancer dans Docker (API comprise) : `JWT_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build`
+  (`JWT_SECRET` est obligatoire : sans lui, le conteneur `api` refuse de démarrer)
 - Requêtes prêtes à l'emploi : `docs/requests.http` (extension VS Code « REST Client »)
 
 ## Configuration (variables d'environnement)
@@ -28,8 +29,13 @@ docker compose up -d
 |---|---|---|
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | PostgreSQL du `docker-compose.yml` | Base de données |
 | `JWT_SECRET` | clé de développement | **À changer en production** : `openssl rand -base64 32` |
+| `JWT_EXPIRATION` | `86400000` (24 h) | Durée de vie du token JWT, en millisecondes |
 | `MAIL_HOST`, `MAIL_PORT` | `localhost`, `1025` | Serveur SMTP |
 | `REMINDERS_CRON` | `0 0 8 * * *` | Heure des rappels d'échéance (essai rapide : `0 * * * * *` = chaque minute) |
+
+En production, activer le profil `prod` (`SPRING_PROFILES_ACTIVE=prod`) : `JWT_SECRET` et `DB_PASSWORD` deviennent
+obligatoires (plus aucune valeur par défaut) et le schéma n'est plus créé par Hibernate (`ddl-auto=validate` : à créer
+par vos propres migrations).
 
 ## Permissions
 
@@ -67,6 +73,10 @@ Toutes les routes sauf `/api/auth/**` demandent l'en-tête `Authorization: Beare
 
 Priorités : `LOW`, `MEDIUM` (défaut), `HIGH`, `URGENT`.
 Erreurs au format `{ "timestamp": "...", "status": 403, "message": "..." }`.
+
+Les tentatives sur `/api/auth/login` sont limitées à 10 par adresse et par quart d'heure, celles sur
+`/api/auth/register` à 5 par heure (au-delà : `429`). Les compteurs sont en mémoire : redémarrer l'application
+les remet à zéro.
 
 ## Notifications e-mail
 

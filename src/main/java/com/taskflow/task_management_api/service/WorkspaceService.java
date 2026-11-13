@@ -102,7 +102,7 @@ public class WorkspaceService {
         }
 
         User invited = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aucun utilisateur avec cet e-mail"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
         if (memberRepository.findByWorkspaceAndUser(workspace, invited).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Déjà membre de ce workspace");
         }

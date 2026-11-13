@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 /** priority : MEDIUM par défaut. assigneeEmail : optionnel (doit être membre du workspace). */
 public record TaskRequest(
@@ -12,4 +13,9 @@ public record TaskRequest(
         @Size(max = 4000) String description,
         Priority priority,
         LocalDate dueDate,
-        String assigneeEmail) {}
+        String assigneeEmail) {
+
+    public TaskRequest {
+        assigneeEmail = assigneeEmail == null ? null : assigneeEmail.trim().toLowerCase(Locale.ROOT);
+    }
+}

@@ -5,4 +5,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record AddMemberRequest(@NotBlank @Email String email, @NotNull Role role) {}
+import java.util.Locale;
+
+public record AddMemberRequest(@NotBlank @Email String email, @NotNull Role role) {
+
+    public AddMemberRequest {
+        email = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+}

@@ -23,7 +23,8 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cet e-mail est déjà utilisé");
+            // Message volontairement générique : ne confirme pas l'existence d'un compte.
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Impossible de créer le compte avec ces informations");
         }
         User user = User.builder()
                 .name(request.name())

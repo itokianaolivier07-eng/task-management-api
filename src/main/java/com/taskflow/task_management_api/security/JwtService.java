@@ -14,17 +14,21 @@ public class JwtService {
 
     private final SecretKey key;
     private final long expiration;
+    private final String issuer;
 
     public JwtService(@Value("${jwt.secret}") String secret,
-                      @Value("${jwt.expiration}") long expiration) {
+                      @Value("${jwt.expiration}") long expiration,
+                      @Value("${jwt.issuer}") String issuer) {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         this.expiration = expiration;
+        this.issuer = issuer;
     }
 
     public String generateToken(String email) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(email)
+                .issuer(issuer)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expiration))
                 .signWith(key)
@@ -32,7 +36,7 @@ public class JwtService {
     }
 
     public String extractEmail(String token) {
-        return Jwts.parser().verifyWith(key).build()
+        return Jwts.parser().verifyWith(key).requireIssuer(issuer).build()
                 .parseSignedClaims(token).getPayload().getSubject();
     }
 }
