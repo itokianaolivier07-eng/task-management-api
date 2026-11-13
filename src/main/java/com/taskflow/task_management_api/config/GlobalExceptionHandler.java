@@ -5,9 +5,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -47,5 +49,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleIntegrity(DataIntegrityViolationException ex) {
         return build(409, "Conflit de données");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return build(400, "Valeur invalide pour le paramètre « " + ex.getName() + " »");
+    }
+
+    /**
+     * Repli : garantit le même format JSON pour les erreurs non prévues (400, 404, 405, 415, 500…).
+     * Le statut est repris de l'exception lorsqu'elle en porte un, sinon 500.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
+        if (ex instanceof ErrorResponse errorResponse) {
+            String detail = errorResponse.getBody() == null ? null : errorResponse.getBody().getDetail();
+            return build(errorResponse.getStatusCode().value(), detail != null ? detail : "Erreur");
+        }
+        return build(500, "Erreur interne du serveur");
     }
 }

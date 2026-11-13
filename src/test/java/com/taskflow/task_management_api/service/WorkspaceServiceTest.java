@@ -75,6 +75,33 @@ class WorkspaceServiceTest {
     }
 
     @Test
+    void adminCannotInviteAsAdmin() {
+        givenAdminRequester();
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.addMember("admin@x.com", 1L, new AddMemberRequest("invited@x.com", Role.ADMIN)));
+
+        assertEquals(403, ex.getStatusCode().value());
+        verify(memberRepository, never()).save(any());
+    }
+
+    @Test
+    void adminCanInviteAsMember() {
+        givenAdminRequester();
+
+        var response = service.addMember("admin@x.com", 1L, new AddMemberRequest("invited@x.com", Role.MEMBER));
+
+        assertEquals(Role.MEMBER, response.role());
+    }
+
+    private void givenAdminRequester() {
+        User admin = User.builder().id(4L).name("Admin").email("admin@x.com").password("x").build();
+        when(userRepository.findByEmail("admin@x.com")).thenReturn(Optional.of(admin));
+        when(memberRepository.findByWorkspaceAndUser(workspace, admin))
+                .thenReturn(Optional.of(WorkspaceMember.builder().id(12L).workspace(workspace).user(admin).role(Role.ADMIN).build()));
+    }
+
+    @Test
     void ownerCanInvite() {
         var response = service.addMember("owner@x.com", 1L, new AddMemberRequest("invited@x.com", Role.ADMIN));
 

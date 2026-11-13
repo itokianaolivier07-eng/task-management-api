@@ -100,6 +100,9 @@ public class WorkspaceService {
         if (request.role() == Role.OWNER) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le rôle OWNER ne peut pas être attribué");
         }
+        if (me.getRole() == Role.ADMIN && request.role() != Role.MEMBER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Un ADMIN ne peut inviter qu'avec le rôle MEMBER");
+        }
 
         User invited = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));

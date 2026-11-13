@@ -31,11 +31,13 @@ docker compose up -d
 | `JWT_SECRET` | clé de développement | **À changer en production** : `openssl rand -base64 32` |
 | `JWT_EXPIRATION` | `86400000` (24 h) | Durée de vie du token JWT, en millisecondes |
 | `MAIL_HOST`, `MAIL_PORT` | `localhost`, `1025` | Serveur SMTP |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Origines autorisées par CORS (front) |
 | `REMINDERS_CRON` | `0 0 8 * * *` | Heure des rappels d'échéance (essai rapide : `0 * * * * *` = chaque minute) |
 
 En production, activer le profil `prod` (`SPRING_PROFILES_ACTIVE=prod`) : `JWT_SECRET` et `DB_PASSWORD` deviennent
-obligatoires (plus aucune valeur par défaut) et le schéma n'est plus créé par Hibernate (`ddl-auto=validate` : à créer
-par vos propres migrations).
+obligatoires (plus aucune valeur par défaut) et le schéma est créé et versionné par Flyway
+(`src/main/resources/db/migration`) au lieu d'être modifié par Hibernate (`ddl-auto=validate`). En développement,
+Hibernate garde la main (`ddl-auto=update`) et Flyway est désactivé.
 
 ## Permissions
 
@@ -50,6 +52,9 @@ par vos propres migrations).
 | Inviter des membres, modifier le workspace | ✅ | ✅ | ❌ |
 | Retirer un membre | ✅ | MEMBER uniquement | ❌ |
 | Changer les rôles, supprimer le workspace | ✅ | ❌ | ❌ |
+
+Lors d'une invitation, un `ADMIN` ne peut attribuer que le rôle `MEMBER` ; seul l'`OWNER` peut inviter en `ADMIN`.
+Le rôle `OWNER` n'est jamais attribuable par invitation.
 
 ## Endpoints
 
@@ -72,7 +77,8 @@ Toutes les routes sauf `/api/auth/**` demandent l'en-tête `Authorization: Beare
 | DELETE | `/api/comments/{id}` | Supprimer un commentaire |
 
 Priorités : `LOW`, `MEDIUM` (défaut), `HIGH`, `URGENT`.
-Erreurs au format `{ "timestamp": "...", "status": 403, "message": "..." }`.
+Toutes les erreurs — y compris `401` et `500` — ont le format `{ "timestamp": "...", "status": 403, "message": "..." }`.
+Les origines listées dans `CORS_ALLOWED_ORIGINS` sont autorisées sur toutes les routes (pré-vol `OPTIONS` accepté).
 
 Les tentatives sur `/api/auth/login` sont limitées à 10 par adresse et par quart d'heure, celles sur
 `/api/auth/register` à 5 par heure (au-delà : `429`). Les compteurs sont en mémoire : redémarrer l'application
