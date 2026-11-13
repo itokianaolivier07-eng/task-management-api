@@ -23,6 +23,7 @@ Content-Type: application/json
 
 { "name": "Agence Web", "description": "Projets clients" }
 
+
 ### 4. Alice invite Bob
 POST {{host}}/api/workspaces/{{workspace.response.body.id}}/members
 Authorization: Bearer {{alice.response.body.token}}
