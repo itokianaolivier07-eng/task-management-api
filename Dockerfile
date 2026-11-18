@@ -10,5 +10,8 @@ RUN mvn -q package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+# Ne pas exécuter l'API en root
+RUN groupadd -r app && useradd -r -g app app
+USER app
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

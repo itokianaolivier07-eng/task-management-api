@@ -32,7 +32,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Map<String, Rule> RULES = Map.of(
             LOGIN_PATH, new Rule(10, 15 * 60_000L),
-            REGISTER_PATH, new Rule(5, 60 * 60_000L));
+            REGISTER_PATH, new Rule(5, 60 * 60_000L),
+            "/api/auth/verify-2fa", new Rule(10, 15 * 60_000L),
+            "/api/2fa/enable", new Rule(10, 15 * 60_000L),
+            "/api/2fa/disable", new Rule(10, 15 * 60_000L),
+            "/api/auth/verify-email", new Rule(20, 15 * 60_000L),
+            "/api/auth/resend-verification", new Rule(5, 60 * 60_000L),
+            "/api/auth/forgot-password", new Rule(5, 60 * 60_000L),
+            "/api/auth/reset-password", new Rule(10, 15 * 60_000L),
+            "/api/users/me/password", new Rule(10, 15 * 60_000L));
 
     private record Window(long expiresAt, int attempts) {}
 
