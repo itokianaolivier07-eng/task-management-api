@@ -34,10 +34,13 @@ build/
 
 ### Local ###
 .env
+.env.local
+.env.*.local
 *.zip
 
 ### Divers ###
 *.log
 .DS_Store
 .env.*
+!.env.example
 application-local.properties

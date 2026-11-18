@@ -29,13 +29,32 @@ docker compose up -d
 |---|---|---|
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | PostgreSQL du `docker-compose.yml` | Base de données |
 | `JWT_SECRET` | clé de développement | **À changer en production** : `openssl rand -base64 32` |
-| `JWT_EXPIRATION` | `86400000` (24 h) | Durée de vie du token JWT, en millisecondes |
+| `JWT_EXPIRATION` | `7200000` (2 h) | Durée de vie du token JWT, en millisecondes |
 | `MAIL_HOST`, `MAIL_PORT` | `localhost`, `1025` | Serveur SMTP |
+| `MAIL_USER`, `MAIL_PASSWORD` | vide | Identifiants SMTP réels |
+| `MAIL_FROM` | `no-reply@taskflow.local` | Adresse expéditeur |
+| `MAIL_PROTOCOL` | `smtp` | Protocole SMTP |
+| `MAIL_AUTH`, `MAIL_STARTTLS`, `MAIL_STARTTLS_REQUIRED`, `MAIL_SSL_ENABLE` | voir `.env.example` | Sécurité de la connexion SMTP |
+| `MAIL_CONNECTION_TIMEOUT`, `MAIL_TIMEOUT`, `MAIL_WRITE_TIMEOUT` | `5000` | Délais SMTP en millisecondes |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Origines autorisées par CORS (front) |
 | `REMINDERS_CRON` | `0 0 8 * * *` | Heure des rappels d'échéance (essai rapide : `0 * * * * *` = chaque minute) |
 
+Pour démarrer en local avec les variables du fichier `.env` :
+
+```bash
+set -a
+source .env
+set +a
+docker compose up -d db mailpit
+./mvnw spring-boot:run
+```
+
+Docker Compose charge automatiquement `.env`. Copiez `.env.example` vers `.env`, puis remplacez tous les secrets locaux.
+Ne commitez jamais `.env` : il est ignoré par Git.
+
 En production, activer le profil `prod` (`SPRING_PROFILES_ACTIVE=prod`) : `JWT_SECRET` et `DB_PASSWORD` deviennent
-obligatoires (plus aucune valeur par défaut) et le schéma est créé et versionné par Flyway
+obligatoires (plus aucune valeur par défaut), `MAIL_HOST`, `MAIL_USER` et `MAIL_PASSWORD` doivent être configurés,
+et le schéma est créé et versionné par Flyway.
 (`src/main/resources/db/migration`) au lieu d'être modifié par Hibernate (`ddl-auto=validate`). En développement,
 Hibernate garde la main (`ddl-auto=update`) et Flyway est désactivé.
 
