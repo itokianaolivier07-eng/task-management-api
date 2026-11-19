@@ -77,7 +77,8 @@ Le rôle `OWNER` n'est jamais attribuable par invitation.
 
 ## Endpoints
 
-Toutes les routes sauf `/api/auth/**` demandent l'en-tête `Authorization: Bearer <token>`.
+Toutes les routes sauf `/api/auth/**` exigent une session : cookie HttpOnly (navigateur) ou en-tête
+`Authorization: Bearer <token>` (clients API).
 
 | Méthode | Route | Description |
 |---|---|---|
@@ -86,6 +87,8 @@ Toutes les routes sauf `/api/auth/**` demandent l'en-tête `Authorization: Beare
 | GET / PUT / DELETE | `/api/workspaces/{id}` | Détail / modifier / supprimer |
 | POST / GET | `/api/workspaces/{id}/members` | Inviter (par e-mail + rôle) / lister |
 | PATCH / DELETE | `/api/workspaces/{id}/members/{memberId}` | Changer le rôle / retirer |
+| POST | `/api/workspaces/{id}/leave` | Quitter le workspace (impossible pour le OWNER) |
+| POST | `/api/workspaces/{id}/transfer-ownership/{memberId}` | Le OWNER cède la propriété (il devient ADMIN) |
 | POST / GET | `/api/workspaces/{id}/projects` | Créer / lister les projets |
 | GET / PUT / DELETE | `/api/projects/{id}` | Détail / modifier / supprimer |
 | POST / GET | `/api/projects/{id}/tasks` | Créer / lister (filtres `?status=&priority=&assigneeId=`) |
@@ -99,9 +102,22 @@ Priorités : `LOW`, `MEDIUM` (défaut), `HIGH`, `URGENT`.
 Toutes les erreurs — y compris `401` et `500` — ont le format `{ "timestamp": "...", "status": 403, "message": "..." }`.
 Les origines listées dans `CORS_ALLOWED_ORIGINS` sont autorisées sur toutes les routes (pré-vol `OPTIONS` accepté).
 
-Les tentatives sur `/api/auth/login` sont limitées à 10 par adresse et par quart d'heure, celles sur
+Les échecs de connexion sur `/api/auth/login` sont limités à 10 par adresse et par quart d'heure, celles sur
 `/api/auth/register` à 5 par heure (au-delà : `429`). Les compteurs sont en mémoire : redémarrer l'application
 les remet à zéro.
+
+## Compte et sécurité
+
+Les requêtes qui modifient des données et s'authentifient par cookie doivent porter l'en-tête `X-Requested-With`.
+
+| Méthode | Route | Description |
+|---|---|---|
+| POST | `/api/auth/verify-email` · `/api/auth/resend-verification` | Confirmer l'adresse e-mail / renvoyer le lien |
+| POST | `/api/auth/forgot-password` · `/api/auth/reset-password` | Mot de passe oublié |
+| POST | `/api/auth/verify-2fa` · `/api/auth/logout` | 2e étape de connexion / déconnexion |
+| GET / POST | `/api/2fa/status` · `/setup` · `/enable` · `/disable` | Double authentification (TOTP) |
+| GET / DELETE | `/api/users/me` | Profil / supprimer mon compte |
+| POST | `/api/users/me/password` | Changer le mot de passe (déconnecte toutes les sessions) |
 
 ## Notifications e-mail
 

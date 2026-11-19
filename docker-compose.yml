@@ -13,36 +13,26 @@ services:
     image: axllent/mailpit
     ports: ["1025:1025", "8025:8025"]
 
+  # Lancé uniquement avec : JWT_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build
+  # Si JWT_SECRET est vide, l'application refuse de démarrer (profil prod, aucun secret par défaut).
+  api:
+    profiles: ["full"]
+    build: .
+    depends_on: [db, mailpit]
+    ports: ["8080:8080"]
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/taskdb
+      DB_USER: task
+      DB_PASSWORD: task
+      JWT_SECRET: ${JWT_SECRET:-}
+      COOKIE_SECURE: "false"   # http://localhost : pas de HTTPS en local
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USER: ""
+      MAIL_PASSWORD: ""
+      MAIL_AUTH: "false"
+      MAIL_STARTTLS: "false"
+
 volumes:
   pgdata:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  

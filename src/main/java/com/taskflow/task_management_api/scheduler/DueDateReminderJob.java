@@ -13,7 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Envoie un rappel pour les tâches non terminées dont l'échéance est aujourd'hui ou demain. */
+/**
+ * Envoie un rappel pour les tâches non terminées dont l'échéance est aujourd'hui ou demain.
+ * Une tâche n'est marquée « rappel envoyé » que si l'e-mail est réellement parti : en cas de panne SMTP,
+ * elle sera retentée au prochain passage.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -27,16 +31,20 @@ public class DueDateReminderJob {
     public void sendReminders() {
         LocalDate today = LocalDate.now();
         List<Task> tasks = taskRepository.findDueBetween(today, today.plusDays(1), TaskStatus.DONE);
+        int sent = 0;
         for (Task task : tasks) {
-            notificationService.send(
+            boolean ok = notificationService.sendNow(
                     task.getAssignee().getEmail(),
                     "Rappel : échéance proche pour « " + task.getTitle() + " »",
                     "Bonjour " + task.getAssignee().getName() + ",\n\n"
                             + "La tâche « " + task.getTitle() + " » (projet " + task.getProject().getName()
                             + ") est à rendre le " + task.getDueDate() + ".\n"
                             + "Statut actuel : " + task.getStatus() + "\n");
-            task.setReminderSent(true);
+            if (ok) {
+                task.setReminderSent(true);
+                sent++;
+            }
         }
-        log.info("{} rappel(s) d'échéance envoyé(s)", tasks.size());
+        log.info("{} rappel(s) d'échéance envoyé(s) sur {}", sent, tasks.size());
     }
 }

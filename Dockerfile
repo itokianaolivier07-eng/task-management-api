@@ -10,6 +10,8 @@ RUN mvn -q package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+# Profil prod par défaut : jamais de secret JWT par défaut ni de ddl-auto=update dans l'image
+ENV SPRING_PROFILES_ACTIVE=prod
 # Ne pas exécuter l'API en root
 RUN groupadd -r app && useradd -r -g app app
 USER app

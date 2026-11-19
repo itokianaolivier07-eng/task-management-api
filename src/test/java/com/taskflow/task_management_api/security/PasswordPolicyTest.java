@@ -34,4 +34,10 @@ class PasswordPolicyTest {
         assertThrows(ResponseStatusException.class,
                 () -> PasswordPolicy.validate("jonathan-2024-xyz", "jonathan@x.com", "J"));
     }
+
+    @Test
+    void rejectsMoreThan72BytesEvenIfFewerThan72Characters() {
+        String accents = "éèêëàâäôöûüç".repeat(4) + "a1"; // 50 caractères, 98 octets
+        assertThrows(ResponseStatusException.class, () -> PasswordPolicy.validate(accents, "a@b.com", "Alice"));
+    }
 }

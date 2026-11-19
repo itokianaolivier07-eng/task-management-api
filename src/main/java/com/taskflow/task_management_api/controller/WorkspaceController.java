@@ -69,4 +69,16 @@ public class WorkspaceController {
     public void removeMember(Authentication auth, @PathVariable Long id, @PathVariable Long memberId) {
         workspaceService.removeMember(auth.getName(), id, memberId);
     }
+
+    @PostMapping("/{id}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leave(Authentication auth, @PathVariable Long id) {
+        workspaceService.leave(auth.getName(), id);
+    }
+
+    @PostMapping("/{id}/transfer-ownership/{memberId}")
+    public MemberResponse transferOwnership(Authentication auth, @PathVariable Long id,
+                                            @PathVariable Long memberId) {
+        return workspaceService.transferOwnership(auth.getName(), id, memberId);
+    }
 }

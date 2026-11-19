@@ -18,8 +18,8 @@ public final class PasswordPolicy {
     private PasswordPolicy() {}
 
     public static void validate(String password, String email, String name) {
-        if (password == null || password.length() < 12 || password.length() > 72) {
-            throw bad("Le mot de passe doit contenir entre 12 et 72 caractères");
+        if (password == null || password.length() < 12 || password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw bad("Le mot de passe doit contenir entre 12 et 72 caractères (72 octets maximum : les accents comptent double)");
         }
         boolean letter = false;
         boolean digit = false;

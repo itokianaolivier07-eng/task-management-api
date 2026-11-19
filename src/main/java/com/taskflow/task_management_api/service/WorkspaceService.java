@@ -154,4 +154,40 @@ public class WorkspaceService {
         taskRepository.unassignUserInWorkspace(workspace.getId(), target.getUser().getId());
         memberRepository.deleteById(targetId);
     }
+
+    /** Un membre (ADMIN ou MEMBER) quitte le workspace. Le OWNER doit d'abord transférer la propriété. */
+    @Transactional
+    public void leave(String email, Long workspaceId) {
+        User user = access.getUser(email);
+        Workspace workspace = access.getWorkspace(workspaceId);
+        WorkspaceMember me = access.requireMember(workspace, user);
+        if (me.getRole() == Role.OWNER) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Le OWNER doit d'abord transférer la propriété du workspace");
+        }
+        Long memberId = me.getId();
+        Long userId = user.getId();
+        taskRepository.unassignUserInWorkspace(workspace.getId(), userId);
+        memberRepository.deleteById(memberId);
+    }
+
+    /** Le OWNER cède la propriété à un autre membre et devient ADMIN. */
+    @Transactional
+    public MemberResponse transferOwnership(String email, Long workspaceId, Long memberId) {
+        Workspace workspace = access.getWorkspace(workspaceId);
+        WorkspaceMember me = access.requireMember(workspace, access.getUser(email));
+        if (me.getRole() != Role.OWNER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seul le OWNER peut transférer la propriété");
+        }
+        WorkspaceMember target = getMember(workspace, memberId);
+        if (target.getId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tu es déjà propriétaire de ce workspace");
+        }
+        me.setRole(Role.ADMIN);
+        target.setRole(Role.OWNER);
+        workspace.setOwner(target.getUser());
+        memberRepository.save(me);
+        workspaceRepository.save(workspace);
+        return toMember(memberRepository.save(target));
+    }
 }
